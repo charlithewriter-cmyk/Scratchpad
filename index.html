@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#002FA7">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Scratchpad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --klein:#002FA7; --klein-deep:#00227a; --klein-soft:#dfe6f7;
+  --cream:#FBF5E6; --cream-deep:#F2E9D0;
+  --yolk:#FFC20E; --ink:#14214a; --muted:#6b7596;
+  --radius:24px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:'Onest',system-ui,sans-serif;line-height:1.5}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 20px 80px}
+h1,h2,h3{margin:0;line-height:1.15}
+
+/* header */
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:18px}
+.brand{font-size:1.5rem;font-weight:700;color:var(--klein);letter-spacing:-.02em}
+.count{color:var(--muted);font-size:.9rem}
+.searchbar{position:relative}
+.searchbar input{width:100%;padding:16px 20px 16px 52px;border-radius:999px;border:2px solid transparent;background:#fff;font-size:1.05rem;box-shadow:0 1px 0 rgba(0,47,167,.08)}
+.searchbar input:focus{outline:none;border-color:var(--klein)}
+.searchbar svg{position:absolute;left:20px;top:50%;transform:translateY(-50%);color:var(--klein)}
+
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 8px}
+.btn{border:2px solid var(--klein);background:transparent;color:var(--klein);padding:10px 20px;border-radius:999px;font-weight:600}
+.btn:hover{background:var(--klein-soft)}
+.btn.primary{background:var(--klein);color:var(--yolk)}
+.btn.primary:hover{background:var(--klein-deep)}
+.btn.on{background:var(--yolk);border-color:var(--yolk);color:var(--klein-deep)}
+.btn.small{padding:6px 14px;font-size:.88rem}
+.btn.danger{border-color:#b3261e;color:#b3261e}
+.btn.danger:hover{background:#fbe3e1}
+.btn:focus-visible,.tile:focus-visible,.chip:focus-visible,summary:focus-visible{outline:3px solid var(--yolk);outline-offset:2px}
+
+.chips{display:flex;gap:8px;overflow-x:auto;padding:8px 0 14px;scrollbar-width:thin}
+.chip{flex:none;border:1.5px solid var(--klein);background:transparent;color:var(--klein);padding:5px 14px;border-radius:999px;font-size:.88rem}
+.chip.on{background:var(--klein);color:var(--yolk)}
+.chip span{opacity:.6;margin-left:4px}
+
+/* tiles */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px}
+.tile{aspect-ratio:1;border:0;border-radius:var(--radius);background:var(--klein);color:var(--yolk);padding:22px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s}
+.tile:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(0,47,167,.28)}
+.tile .t{font-weight:700;font-size:1.35rem;line-height:1.15;letter-spacing:-.01em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.tile .m{font-size:.78rem;color:#b9c8f5;display:flex;flex-direction:column;gap:6px}
+.tile .bar{height:4px;border-radius:4px;background:rgba(255,255,255,.2);overflow:hidden}
+.tile .bar i{display:block;height:100%;background:var(--yolk)}
+.tile.done{background:#5d74b8}
+.tile.done .t{text-decoration:line-through;text-decoration-thickness:2px}
+.badge{display:inline-block;background:rgba(255,194,14,.18);color:var(--yolk);padding:1px 8px;border-radius:999px;font-size:.72rem;margin-left:6px}
+
+.empty{text-align:center;padding:70px 20px;color:var(--muted)}
+.empty h2{color:var(--klein);margin-bottom:8px}
+
+/* combine */
+.thread{margin:26px 0 34px}
+.thread h2{color:var(--klein);font-size:1.15rem}
+.thread p{margin:2px 0 12px;color:var(--muted);font-size:.88rem}
+.thread .grid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+.thread .tile{padding:16px}
+.thread .tile .t{font-size:1.1rem}
+
+/* idea screen */
+.back{background:none;border:0;color:var(--klein);font-weight:600;padding:4px 0;margin-bottom:14px}
+.card{background:#fff;border-radius:var(--radius);padding:26px;margin-bottom:18px}
+.card.hero{background:var(--klein);color:#fff}
+.hero input.title{width:100%;background:transparent;border:0;border-bottom:2px solid transparent;color:var(--yolk);font-size:clamp(1.6rem,4vw,2.4rem);font-weight:700;letter-spacing:-.02em;padding:2px 0}
+.hero input.title:focus{outline:none;border-bottom-color:var(--yolk)}
+.hero .row{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin:10px 0 16px;color:#c9d6fa;font-size:.9rem}
+.hero input.cat,.hero select{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:999px;padding:5px 14px}
+.hero select option{color:var(--ink)}
+.hero textarea{width:100%;min-height:90px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:16px;color:#fff;padding:12px 14px;resize:vertical}
+.hero ::placeholder{color:#a9bbf0}
+.hero input.cat:focus,.hero textarea:focus,.hero select:focus{outline:2px solid var(--yolk)}
+
+details.acc{background:#fff;border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+details.acc summary{list-style:none;padding:18px 24px;font-weight:600;color:var(--klein);font-size:1.05rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px}
+details.acc summary::-webkit-details-marker{display:none}
+details.acc summary::after{content:'+';font-size:1.5rem;line-height:1;color:var(--klein);transition:transform .2s}
+details.acc[open] summary::after{transform:rotate(45deg)}
+details.acc .body{padding:0 24px 22px}
+.sub{color:var(--muted);font-size:.85rem;font-weight:400}
+label.f{display:block;font-size:.82rem;font-weight:600;color:var(--muted);margin:12px 0 4px}
+.body input[type=text],.body input[type=date],.body textarea{width:100%;border:1.5px solid var(--klein-soft);border-radius:14px;padding:10px 14px;background:var(--cream)}
+.body textarea{min-height:110px;resize:vertical}
+.body input:focus,.body textarea:focus{outline:none;border-color:var(--klein)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+.todo{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--cream-deep)}
+.todo input[type=checkbox]{appearance:none;flex:none;width:24px;height:24px;border:2px solid var(--klein);border-radius:8px;background:#fff;display:grid;place-content:center;cursor:pointer}
+.todo input[type=checkbox]:checked{background:#aab3c9;border-color:#aab3c9}
+.todo input[type=checkbox]:checked::after{content:'✓';color:#fff;font-weight:700;font-size:.95rem}
+.todo input[type=checkbox]:focus-visible{outline:3px solid var(--yolk)}
+.body .todo input.tx{flex:1;border:0;border-radius:0;background:transparent;padding:2px 0;min-width:0}
+.body .todo input.tx:focus{outline:none;border-bottom:1.5px solid var(--klein)}
+.todo.done .tx{color:#a3aac0;text-decoration:line-through}
+.todo .x{border:0;background:none;color:#a3aac0;font-size:1.2rem;padding:0 6px}
+.todo .x:hover{color:#b3261e}
+.addrow{display:flex;gap:8px;margin-top:14px}
+.addrow input{flex:1}
+.progress{height:8px;background:var(--klein-soft);border-radius:8px;overflow:hidden;margin:2px 0 8px}
+.progress i{display:block;height:100%;background:var(--klein);transition:width .25s}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+
+/* dialogs */
+dialog{border:0;border-radius:var(--radius);padding:0;max-width:min(520px,92vw);width:100%;background:var(--cream);color:var(--ink)}
+dialog::backdrop{background:rgba(0,20,70,.55)}
+dialog .in{padding:26px}
+dialog h2{color:var(--klein);margin-bottom:14px}
+dialog input[type=text],dialog textarea{width:100%;border:1.5px solid var(--klein-soft);border-radius:14px;padding:10px 14px;background:#fff}
+dialog input:focus,dialog textarea:focus{outline:none;border-color:var(--klein)}
+dialog textarea{min-height:90px;resize:vertical}
+.sugg{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;min-height:30px}
+.sugg .chip{background:#fff}
+.sugg .chip.on{background:var(--klein)}
+.dlg-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+.scr .tile{width:min(100%,260px);margin:0 auto 14px;cursor:default}
+.scr .tile:hover{transform:none;box-shadow:none}
+.note{background:#fff;border-left:4px solid var(--yolk);padding:10px 14px;border-radius:10px;font-size:.9rem;margin:8px 0}
+footer{margin-top:50px;color:var(--muted);font-size:.85rem;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+footer .btn{color:var(--muted);border-color:var(--cream-deep)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--klein-deep);color:var(--yolk);padding:10px 20px;border-radius:999px;font-size:.9rem;z-index:10}
+.hero .btn{color:var(--yolk);border-color:var(--yolk)}
+.hero .btn:hover{background:rgba(255,194,14,.15)}
+dialog{max-height:94vh;overflow:auto}
+dialog.wide{max-width:min(620px,94vw)}
+.tile .pin{position:absolute;top:14px;right:18px;font-size:1.05rem;color:var(--yolk)}
+.tile.dragover{outline:4px dashed var(--yolk);outline-offset:-9px;transform:scale(1.02)}
+body.dragging .tile{outline:3px dashed rgba(255,194,14,.55);outline-offset:-9px}
+.banner{background:#fff;border-radius:var(--radius);padding:14px 20px;margin:4px 0 10px}
+.banner h2{font-size:.95rem;color:var(--klein);margin-bottom:4px}
+.banner .due{display:block;width:100%;border:0;background:none;text-align:left;padding:4px 0;color:var(--ink)}
+.banner .due:hover{color:var(--klein)}
+.banner .when{display:inline-block;min-width:96px;font-weight:600;color:var(--klein)}
+.banner .when.over{color:#b3261e}
+.inspo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-top:10px}
+.ins{border:1.5px solid var(--klein-soft);border-radius:18px;overflow:hidden;background:var(--cream);display:flex;flex-direction:column}
+.ins .pic{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--klein-soft);cursor:zoom-in}
+.ins a.lnk,.ins .lnk{padding:12px 14px 0;display:block;color:var(--klein);font-weight:600;word-break:break-word;text-decoration:none}
+.ins .lnk small{display:block;font-weight:400;color:var(--muted)}
+.body .ins textarea{margin:10px 12px 0;width:calc(100% - 24px);min-height:64px;background:#fff;font-size:.9rem}
+.ins .foot{display:flex;justify-content:space-between;align-items:center;padding:6px 14px 10px;font-size:.78rem;color:var(--muted)}
+.ins .foot button{border:0;background:none;color:#b3261e;font-size:.8rem}
+.zone{border:2px dashed var(--klein);border-radius:18px;padding:14px;text-align:center;color:var(--muted);background:#fff;margin-bottom:10px}
+.zone.over{background:var(--klein-soft)}
+.items{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.item{position:relative;width:78px;height:78px;border-radius:12px;overflow:hidden;background:var(--klein-soft);display:grid;place-items:center;font-size:.68rem;padding:6px;text-align:center;word-break:break-all;color:var(--klein)}
+.item img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.item button{position:absolute;top:3px;right:3px;z-index:1;border:0;border-radius:50%;width:22px;height:22px;background:rgba(0,0,0,.65);color:#fff;line-height:1;padding:0}
+dialog select{width:100%;border:1.5px solid var(--klein-soft);border-radius:14px;padding:10px 14px;background:#fff}
+.lb img{max-width:100%;max-height:78vh;display:block;margin:auto;border-radius:12px}
+@media (max-width:560px){.two{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr);gap:12px}.tile{padding:16px}.tile .t{font-size:1.1rem}.card{padding:20px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<dialog id="newDlg"><form method="dialog" class="in" id="newForm">
+  <h2>New idea</h2>
+  <label class="f" for="nTitle">Title</label>
+  <input type="text" id="nTitle" placeholder="e.g. Behind-the-scenes reel at the pottery studio" autocomplete="off" required>
+  <label class="f" for="nSum">Summary</label>
+  <textarea id="nSum" placeholder="What's the idea? Mention anything you'd need to hire, buy or book — it'll go on your to-do list."></textarea>
+  <label class="f" for="nCat">Category <span class="sub">— pick a suggestion or type your own</span></label>
+  <input type="text" id="nCat" placeholder="Social media ideas" autocomplete="off" list="catList">
+  <div class="sugg" id="nSugg" aria-live="polite"></div>
+  <div class="dlg-actions">
+    <button type="button" class="btn" id="nCancel">Cancel</button>
+    <button type="submit" class="btn primary">Save &amp; build to-do list</button>
+  </div>
+</form></dialog>
+
+<dialog id="capDlg" class="wide"><form class="in" id="capForm">
+  <h2>Capture inspo</h2>
+  <div class="zone" id="capZone">Drop, paste (Ctrl/⌘+V) or add links and photos here
+    <div class="dlg-actions" style="justify-content:center;margin:10px 0 0"><button type="button" class="btn small" id="capPick">Choose photos</button><button type="button" class="btn small" id="capCam">Take photo</button></div></div>
+  <div class="addrow" style="margin-top:0"><input type="text" id="capUrl" placeholder="Paste a link…" aria-label="Link"><button type="button" class="btn small" id="capAddUrl">Add link</button></div>
+  <div class="items" id="capItems"></div>
+  <label class="f" for="capNote">How might I use this?</label>
+  <textarea id="capNote" placeholder="e.g. Copy the lighting and pacing for the pottery reel"></textarea>
+  <label class="f" for="capTarget">Save to</label>
+  <select id="capTarget"></select>
+  <div id="capNew">
+    <label class="f" for="capTitle">Title <span class="sub">— suggested, edit freely</span></label>
+    <input type="text" id="capTitle" autocomplete="off">
+    <label class="f" for="capCat">Category</label>
+    <input type="text" id="capCat" autocomplete="off" list="catList">
+    <div class="sugg" id="capSugg"></div>
+  </div>
+  <div class="dlg-actions"><button type="button" class="btn" id="capCancel">Cancel</button><button type="submit" class="btn primary">Save inspo</button></div>
+</form></dialog>
+<dialog id="lbDlg" class="lb"><div class="in"><img id="lbImg" alt=""><div class="dlg-actions"><button type="button" class="btn" id="lbClose">Close</button></div></div></dialog>
+<input type="file" id="capFile" accept="image/*" multiple hidden>
+<input type="file" id="capCamFile" accept="image/*" capture="environment" hidden>
+<dialog id="scrDlg"><div class="in scr" id="scrBody"></div></dialog>
+<datalist id="catList"></datalist>
+<input type="file" id="importFile" accept="application/json" hidden>
+
+<script>
+(() => {
+'use strict';
+const KEY = 'scratchpad.v1';
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+const cap = s => s ? s[0].toUpperCase() + s.slice(1) : s;
+
+/* ---------- storage ---------- */
+let state = { ideas: [] };
+try { const raw = localStorage.getItem(KEY); if (raw) state = JSON.parse(raw); } catch (e) {}
+if (!Array.isArray(state.ideas)) state = { ideas: [] };
+state.ideas.forEach(i => { i.attachments = Array.isArray(i.attachments) ? i.attachments : []; i.plan = i.plan || {}; i.todos = i.todos || []; });
+let saveFailed = false;
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { if (!saveFailed) { saveFailed = true; toast('Could not save — browser storage is unavailable.'); } } };
+const byId = id => state.ideas.find(i => i.id === id);
+function touch(i) { i.updated = new Date().toISOString(); save(); }
+
+const fmtDate = iso => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}) + ', ' + d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}); };
+function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; document.body.append(t); setTimeout(() => t.remove(), 2600); }
+
+/* ---------- text analysis ---------- */
+const STOP = new Set(('a an the and or but if of to in on at for with from by as is are was were be been it its this that these those i we you they my our your their me us them do does did have has had will would could should can may might just also about into over under up down out so than then too very more most some any each other such only own same not no nor what which who whom how when where why all both few many much one two get got make made want need idea ideas thing things like use using new etc maybe really bit lot lots').split(' '));
+function stem(w) { return w.length > 4 ? w.replace(/(ing|ed|es|s)$/, '') : w; }
+function words(text) { return (String(text || '').toLowerCase().match(/[a-z][a-z'-]{2,}/g) || []).map(w => w.replace(/'s$/, '')).filter(w => !STOP.has(w)).map(stem); }
+const show = {}; // stem -> a readable form
+function readable(text) { (String(text || '').toLowerCase().match(/[a-z][a-z'-]{2,}/g) || []).forEach(w => { const s = stem(w.replace(/'s$/, '')); if (!show[s] || w.length < show[s].length) show[s] = w.replace(/'s$/, ''); }); }
+
+/* ---------- category suggestions ---------- */
+const CAT_RULES = [
+  ['Social media ideas', /instagram|tiktok|reel|youtube|social|post|caption|follower|hashtag|film|video|content|story|stories|shoot/],
+  ['Business strategy ideas', /business|strategy|revenue|client|customer|pricing|launch|market|sales|brand|offer|product|profit|partner|growth|competitor/],
+  ['Christmas present ideas', /christmas|xmas|stocking|advent|secret santa/],
+  ['Gift ideas', /gift|present|birthday|anniversary|surprise/],
+  ['Event ideas', /party|event|wedding|celebrat|dinner|picnic|gathering|workshop|meetup|host/],
+  ['Recipe & food ideas', /recipe|cook|bake|baking|meal|food|dinner|lunch|breakfast|menu|cake|restaurant/],
+  ['Travel ideas', /travel|trip|holiday|flight|hotel|road ?trip|weekend away|visit|abroad/],
+  ['Writing ideas', /write|writing|blog|book|novel|essay|newsletter|article|poem|script/],
+  ['Home & DIY ideas', /home|garden|diy|decor|paint|furniture|room|kitchen|renovat|build|shelf|plant/],
+  ['Health & fitness ideas', /fitness|gym|run|running|yoga|workout|health|sleep|diet|walk|swim/],
+  ['Money ideas', /money|save|saving|budget|invest|income|side ?hustle|debt/],
+  ['Learning ideas', /learn|course|study|skill|class|read|practice|tutorial/],
+  ['Creative project ideas', /art|paint|craft|design|draw|photo|music|sew|knit|create|make/]
+];
+function suggestCategories(title, summary, noFallback) {
+  const text = (title + ' ' + summary).toLowerCase();
+  if (text.trim().length < 3) return [];
+  const out = [];
+  const existing = [...new Set(state.ideas.map(i => i.category).filter(Boolean))];
+  // existing categories whose words appear in the idea, or whose ideas share words
+  const tw = new Set(words(text));
+  existing.map(c => {
+    const cw = words(c); let score = cw.filter(w => tw.has(w)).length * 2;
+    state.ideas.filter(i => i.category === c).forEach(i => { words(i.title + ' ' + i.summary).forEach(w => { if (tw.has(w)) score += 0.5; }); });
+    return [c, score];
+  }).filter(x => x[1] >= 1).sort((a, b) => b[1] - a[1]).slice(0, 2).forEach(x => out.push(x[0]));
+  CAT_RULES.forEach(([name, re]) => { if (re.test(text) && !out.includes(name) && out.length < 4) out.push(name); });
+  // fallback from the title's most distinctive word
+  const tws = words(title);
+  if (!noFallback && out.length < 2 && tws.length) { readable(title); const w = cap(show[tws[0]] || tws[0]) + ' ideas'; if (!out.includes(w)) out.push(w); }
+  return out.slice(0, 4);
+}
+
+/* ---------- to-do generation ---------- */
+const TEMPLATES = [
+  [/instagram|tiktok|reel|youtube|social|post|film|video|content|shoot/, ['Write a one-line hook for it','Draft a script or shot list','Sort location, props and kit','Film or capture it','Edit and add captions','Schedule the post','Check how it performed']],
+  [/christmas|xmas|gift|present|birthday|anniversary/, ['Set a budget','Note who it is for and what they love','Shortlist three options','Check delivery and order-by dates','Buy it','Wrap or package it','Add a card or note']],
+  [/party|event|wedding|dinner|picnic|gathering|workshop|meetup|host/, ['Pick a date and a guest list','Set a budget','Choose a venue or space','Send invitations','Sort food, drink and kit','Plan the running order','Tidy up and thank people']],
+  [/travel|trip|holiday|flight|hotel|abroad/, ['Choose dates and a budget','Book transport','Book somewhere to stay','Sketch an itinerary','Sort documents and insurance','Pack']],
+  [/write|blog|book|novel|essay|newsletter|article|script/, ['Capture the core point in one sentence','Outline the structure','Write a rough first draft','Leave it overnight, then edit','Get feedback','Publish or send it']],
+  [/business|strategy|revenue|client|customer|pricing|launch|market|sales|brand|offer|product|partner/, ['Define the outcome and how you will measure it','Research similar approaches or competitors','List the costs and who is needed','Pick one small experiment to run first','Set a deadline and an owner','Run the experiment','Review results and decide the next step']],
+  [/home|garden|diy|decor|paint|furniture|room|kitchen|renovat|build|shelf/, ['Measure up and take photos','List materials and tools','Set a budget','Buy or borrow what is needed','Do the work','Tidy up and enjoy it']],
+  [/recipe|cook|bake|meal|food|menu|cake/, ['Find or write the recipe','List ingredients and kit','Shop for what is missing','Do a test run','Note tweaks','Make it for real']]
+];
+const GENERIC = ['Write the idea as one clear sentence','Decide what "done" looks like','List what you need (people, kit, money, places)','Do the first small step','Set a target date','Review: continue, adjust or park it'];
+const VERBS = /\b(hire|rent|buy|book|order|call|email|ask|find|film|write|build|borrow|invite|research|contact|print|message|reserve)\s+(?:a |an |the |some |my |our )?([^.,;:\n!?]{2,40})/gi;
+function generateTodos(idea) {
+  const text = (idea.title + ' ' + idea.summary + ' ' + idea.category).toLowerCase();
+  const tpl = (TEMPLATES.find(t => t[0].test(text)) || [0, GENERIC])[1];
+  const fromText = [];
+  let m; VERBS.lastIndex = 0;
+  const src = idea.title + '. ' + idea.summary;
+  while ((m = VERBS.exec(src)) && fromText.length < 4) {
+    const obj = m[2].replace(/\s+(and|but|so|because|then|to|for|which|that)\b.*$/i, '').trim();
+    if (obj.length > 1) fromText.push(cap(m[1].toLowerCase()) + ' ' + obj);
+  }
+  const all = [...fromText, ...tpl];
+  const seen = new Set();
+  return all.filter(t => { const k = t.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
+}
+const todoObj = text => ({ id: uid(), text, done: false });
+
+/* ---------- combine (find threads between ideas) ---------- */
+function ideaDoc(i) {
+  const w = {};
+  const add = (text, wt) => words(text).forEach(t => { w[t] = (w[t] || 0) + wt; });
+  readable([i.title, i.summary, i.location, i.resources, i.category, i.plan?.details].join(' '));
+  add(i.title, 3); add(i.location, 3); add(i.resources, 3); add(i.summary, 1.5); add(i.plan?.details, 1); add(i.category, 0.5);
+  (i.todos || []).forEach(t => add(t.text, 0.5));
+  (i.attachments || []).forEach(a => { add(a.note, 1); add(a.title, 1); });
+  return w;
+}
+const norm = x => x.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\b(a|an|the|some|my)\b/g, '').replace(/\s+/g, ' ').trim();
+// whole phrases a person typed as a location or a needed resource, e.g. "pottery studio, hackney" / "hire a gimbal"
+const items = i => [i.location, ...String(i.resources || '').split(/[,;\n]/)].map(norm).filter(x => x.length > 2);
+function findThreads(ideas) {
+  const docs = ideas.map(ideaDoc), N = ideas.length, df = {};
+  docs.forEach(d => Object.keys(d).forEach(t => { df[t] = (df[t] || 0) + 1; }));
+  // very common terms (generic to-do steps etc.) carry no signal
+  const idf = t => (df[t] / N > 0.6 && N > 8) ? 0 : Math.log(1 + N / df[t]);
+  const vec = docs.map(d => { const v = {}; let n = 0; for (const t in d) { v[t] = d[t] * idf(t); n += v[t] ** 2; } return { v, n: Math.sqrt(n) || 1 }; });
+  const parent = ideas.map((_, k) => k);
+  const find = a => parent[a] === a ? a : (parent[a] = find(parent[a]));
+  const reasons = {};
+  for (let a = 0; a < N; a++) for (let b = a + 1; b < N; b++) {
+    let dot = 0; const shared = [];
+    for (const t in vec[a].v) if (vec[b].v[t]) { dot += vec[a].v[t] * vec[b].v[t]; shared.push([t, Math.min(docs[a][t], docs[b][t]) * idf(t)]); }
+    const sim = dot / (vec[a].n * vec[b].n);
+    const strong = shared.some(([t, s]) => s >= 2.2); // a distinctive word that matters in both ideas (title/location/resources)
+    const link = (() => { const A = items(ideas[a]), B = items(ideas[b]); return A.some(x => B.includes(x)); })();
+    if (sim >= 0.17 || strong || link) { parent[find(a)] = find(b); }
+  }
+  const groups = {};
+  ideas.forEach((idea, k) => (groups[find(k)] = groups[find(k)] || []).push(k));
+  const out = [];
+  Object.values(groups).forEach(g => {
+    if (g.length < 2) return;
+    const score = {};
+    g.forEach(k => Object.keys(docs[k]).forEach(t => { score[t] = score[t] || { n: 0, s: 0 }; score[t].n++; score[t].s += docs[k][t] * idf(t); }));
+    const top = Object.entries(score).filter(([, x]) => x.n >= 2).sort((a, b) => b[1].s - a[1].s).slice(0, 3).map(([t]) => show[t] || t);
+    const cnt = {}; g.forEach(k => new Set(items(ideas[k])).forEach(x => { cnt[x] = (cnt[x] || 0) + 1; }));
+    const phrases = Object.entries(cnt).filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1]).map(([x]) => x).slice(0, 3);
+    out.push({ ideas: g.map(k => ideas[k]), label: phrases.length ? phrases.join(' · ') : top.length ? top.join(' · ') : 'Loosely related', size: g.length });
+  });
+  const grouped = new Set(out.flatMap(o => o.ideas.map(i => i.id)));
+  return { threads: out.sort((a, b) => b.size - a.size), loose: ideas.filter(i => !grouped.has(i.id)) };
+}
+
+/* ---------- home ---------- */
+let q = '', cat = '', mode = 'all', onlyPinned = false;
+const catCounts = () => { const c = {}; state.ideas.forEach(i => { if (i.category) c[i.category] = (c[i.category] || 0) + 1; }); return c; };
+const progress = i => { const t = i.todos || []; return t.length ? Math.round(t.filter(x => x.done).length / t.length * 100) : 0; };
+function matches(i) {
+  if (cat && i.category !== cat) return false;
+  if (onlyPinned && !i.pinned) return false;
+  if (!q.trim()) return true;
+  const hay = [i.title, i.summary, i.category, i.location, i.resources, i.parked, i.plan?.details, ...(i.todos || []).map(t => t.text), ...(i.attachments || []).flatMap(a => [a.note, a.title, a.url])].join(' ').toLowerCase();
+  return q.toLowerCase().split(/\s+/).filter(Boolean).every(term => hay.includes(term));
+}
+function tileHTML(i) {
+  const p = progress(i);
+  const tag = i.status === 'parked' ? 'Parked' : i.status === 'done' ? 'Done' : i.status === 'doing' ? 'In progress' : '';
+  return `<button class="tile${i.status === 'done' ? ' done' : ''}" data-open="${i.id}" aria-label="${esc(i.title)}">
+    ${i.pinned ? '<span class="pin" aria-label="Pinned">★</span>' : ''}<span class="t">${esc(i.title)}</span>
+    <span class="m"><span>${esc(i.category || 'Uncategorised')}${(i.attachments || []).length ? ` · ${i.attachments.length} inspo` : ''}${tag ? `<span class="badge">${tag}</span>` : ''}</span>
+    ${(i.todos || []).length ? `<span class="bar" title="${p}% complete"><i style="width:${p}%"></i></span>` : ''}</span></button>`;
+}
+function renderHome() {
+  const counts = catCounts();
+  const list = state.ideas.filter(matches).sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.updated.localeCompare(a.updated));
+  let body;
+  if (!state.ideas.length) {
+    body = `<div class="empty"><h2>Your scratchpad is empty</h2><p>Capture your first idea — a to-do list gets built for you.</p>
+      <p><button class="btn primary" data-act="new">New idea</button> <button class="btn" data-act="samples">Load a few examples</button></p></div>`;
+  } else if (!list.length) {
+    body = `<div class="empty"><h2>No matches</h2><p>Try a different word or clear the category.</p></div>`;
+  } else if (mode === 'combine' && list.length > 1) {
+    const { threads, loose } = findThreads(list);
+    body = threads.length ? threads.map(t => `<section class="thread"><h2>${esc(cap(t.label))}</h2><p>${t.size} ideas share this thread</p><div class="grid">${t.ideas.map(tileHTML).join('')}</div></section>`).join('') : `<div class="empty"><h2>No threads yet</h2><p>Add a location, resources or more detail to your ideas and I'll spot what connects them.</p></div>`;
+    if (loose.length) body += `<section class="thread"><h2>Standing alone</h2><p>No connection found yet</p><div class="grid">${loose.map(tileHTML).join('')}</div></section>`;
+  } else {
+    body = `<div class="grid">${list.map(tileHTML).join('')}</div>`;
+  }
+  $('#app').innerHTML = `
+    <div class="top"><h1 class="brand">Scratchpad</h1><span class="count">${state.ideas.length} idea${state.ideas.length === 1 ? '' : 's'}</span></div>
+    <div class="searchbar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="search" type="search" placeholder="Search ideas by keyword or category…  (press / )" value="${esc(q)}" aria-label="Search ideas" autocomplete="off"></div>
+    <div class="actions">
+      <button class="btn primary" data-act="new">+ New idea</button>
+      <button class="btn" data-act="capture">Capture inspo</button>
+      <button class="btn${mode === 'combine' ? ' on' : ''}" data-act="combine" aria-pressed="${mode === 'combine'}">Combine</button>
+      <button class="btn" data-act="scramble">Scramble</button>
+    </div>
+    ${bannerHTML()}
+    ${Object.keys(counts).length ? `<div class="chips" role="group" aria-label="Categories">${state.ideas.some(i => i.pinned) ? `<button class="chip${onlyPinned ? ' on' : ''}" data-pinned="1">★ Pinned</button>` : ''}<button class="chip${cat ? '' : ' on'}" data-cat="">All<span>${state.ideas.length}</span></button>${Object.keys(counts).sort().map(c => `<button class="chip${cat === c ? ' on' : ''}" data-cat="${esc(c)}">${esc(c)}<span>${counts[c]}</span></button>`).join('')}</div>` : ''}
+    <div id="results">${body}</div>
+    <footer><button class="btn small" data-act="export">Export backup</button><button class="btn small" data-act="import">Import</button>${'Notification' in window && Notification.permission === 'default' ? '<button class="btn small" data-act="notif">Enable reminders</button>' : ''}<span>Saved in this browser only.</span></footer>`;
+  const s = $('#search');
+  s.addEventListener('input', () => { q = s.value; const pos = s.selectionStart; renderHome(); const n = $('#search'); n.focus(); n.setSelectionRange(pos, pos); });
+  $('#catList').innerHTML = Object.keys(counts).map(c => `<option value="${esc(c)}">`).join('');
+}
+
+/* ---------- idea screen ---------- */
+function todosHTML(i) {
+  const t = i.todos || [], done = t.filter(x => x.done).length;
+  return `<div class="progress" role="progressbar" aria-valuenow="${done}" aria-valuemin="0" aria-valuemax="${t.length}"><i style="width:${t.length ? done / t.length * 100 : 0}%"></i></div>
+    <div class="sub">${done} of ${t.length} done</div>
+    ${t.map(x => `<div class="todo${x.done ? ' done' : ''}" data-tid="${x.id}"><input type="checkbox" ${x.done ? 'checked' : ''} aria-label="Done"><input class="tx" type="text" value="${esc(x.text)}" aria-label="To-do item"><button class="x" aria-label="Remove item" title="Remove">×</button></div>`).join('')}`;
+}
+function renderIdea(id) {
+  const i = byId(id);
+  if (!i) { location.hash = ''; return; }
+  const stale = Math.floor((Date.now() - new Date(i.updated)) / 864e5);
+  $('#app').innerHTML = `
+    <button class="back" data-act="home">← All ideas</button>
+    <div class="card hero">
+      <input class="title" data-f="title" value="${esc(i.title)}" aria-label="Title">
+      <div class="row">
+        <span>Created ${esc(fmtDate(i.created))}</span>
+        <input class="cat" data-f="category" list="catList" value="${esc(i.category)}" placeholder="Category" aria-label="Category">
+        <select data-f="status" aria-label="Status">
+          ${[['idea','Idea'],['doing','In progress'],['parked','Parked'],['done','Done']].map(([v, l]) => `<option value="${v}"${i.status === v ? ' selected' : ''}>${l}</option>`).join('')}
+        </select>
+        <button class="btn small" id="pinBtn" aria-pressed="${!!i.pinned}">${i.pinned ? '★ Pinned' : '☆ Pin'}</button>
+      </div>
+      <textarea data-f="summary" placeholder="Summary of the idea…" aria-label="Summary">${esc(i.summary)}</textarea>
+    </div>
+    <details class="acc" open><summary>To-do list <span class="sub" id="todoSub"></span></summary><div class="body">
+      <div id="todos">${todosHTML(i)}</div>
+      <div class="addrow"><input type="text" id="newTodo" placeholder="Add a step…" aria-label="New to-do"><button class="btn small" id="addTodo">Add</button></div>
+      <div class="tools"><button class="btn small" id="suggest">Suggest more steps</button><button class="btn small" id="clearDone">Clear completed</button></div>
+    </div></details>
+    <details class="acc"${(i.attachments || []).length ? ' open' : ''}><summary>Inspo <span class="sub" id="inspoCount">${(i.attachments || []).length || ''}</span></summary><div class="body">
+      <div class="inspo-grid" id="inspo">${inspoHTML(i)}</div>
+      <div class="tools"><button class="btn small" id="addInspo">+ Add inspo</button></div>
+      <p class="sub">Tip: paste or drag links and photos anywhere on this screen.</p>
+    </div></details>
+    <details class="acc"><summary>Time plan</summary><div class="body">
+      <div class="two"><div><label class="f" for="start">Start</label><input type="date" id="start" data-f="plan.start" value="${esc(i.plan?.start)}"></div>
+      <div><label class="f" for="due">Target finish</label><input type="date" id="due" data-f="plan.due" value="${esc(i.plan?.due)}"></div></div>
+      <div class="two"><div><label class="f" for="rem">Remind me on</label><input type="date" id="rem" data-f="plan.remind" value="${esc(i.plan?.remind)}"></div>
+      <div style="align-self:end"><button class="btn small" id="ics" type="button">Add to calendar (.ics)</button></div></div>
+      <label class="f" for="pd">Details — milestones, who, when</label><textarea id="pd" data-f="plan.details" placeholder="e.g. Week 1: scout locations. Week 2: film. Week 3: edit and post.">${esc(i.plan?.details)}</textarea>
+    </div></details>
+    <details class="acc"><summary>Location &amp; resources <span class="sub">helps Combine find links</span></summary><div class="body">
+      <label class="f" for="loc">Where does it happen?</label><input type="text" id="loc" data-f="location" value="${esc(i.location)}" placeholder="e.g. Pottery studio, Hackney">
+      <label class="f" for="res">What do you need? (hire, buy, borrow, people)</label><input type="text" id="res" data-f="resources" value="${esc(i.resources)}" placeholder="e.g. Hire a gimbal, ring light, Sam on camera">
+    </div></details>
+    <details class="acc"${i.status === 'parked' || i.parked ? ' open' : ''}><summary>Why it's parked</summary><div class="body">
+      ${stale >= 30 && i.status !== 'done' ? `<div class="note">Untouched for ${stale} days — still worth parking?</div>` : ''}
+      <textarea data-f="parked" placeholder="What's holding it back? Timing, budget, energy, waiting on someone… and what would un-park it?" aria-label="Why it's parked">${esc(i.parked)}</textarea>
+    </div></details>
+    <footer><button class="btn small danger" data-act="delete">Delete idea</button></footer>`;
+  const refreshTodos = () => { $('#todos').innerHTML = todosHTML(i); };
+  const setPath = (path, val) => { const parts = path.split('.'); let o = i; while (parts.length > 1) { const k = parts.shift(); o = o[k] = o[k] || {}; } o[parts[0]] = val; };
+  $('#app').querySelectorAll('[data-f]').forEach(el => el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => {
+    setPath(el.dataset.f, el.value); touch(i);
+    if (el.dataset.f === 'category') $('#catList').innerHTML = Object.keys(catCounts()).map(c => `<option value="${esc(c)}">`).join('');
+  }));
+  const todos = $('#todos');
+  todos.addEventListener('change', e => { const row = e.target.closest('.todo'); if (!row || e.target.type !== 'checkbox') return; const t = i.todos.find(x => x.id === row.dataset.tid); t.done = e.target.checked; touch(i); refreshTodos(); });
+  todos.addEventListener('input', e => { if (!e.target.classList.contains('tx')) return; const t = i.todos.find(x => x.id === e.target.closest('.todo').dataset.tid); t.text = e.target.value; touch(i); });
+  todos.addEventListener('click', e => { if (!e.target.classList.contains('x')) return; i.todos = i.todos.filter(x => x.id !== e.target.closest('.todo').dataset.tid); touch(i); refreshTodos(); });
+  const add = () => { const v = $('#newTodo').value.trim(); if (!v) return; i.todos.push(todoObj(v)); touch(i); refreshTodos(); $('#newTodo').value = ''; $('#newTodo').focus(); };
+  $('#addTodo').onclick = add;
+  $('#newTodo').addEventListener('keydown', e => { if (e.key === 'Enter') add(); });
+  $('#suggest').onclick = () => { const have = new Set(i.todos.map(t => t.text.toLowerCase())); const more = generateTodos(i).filter(t => !have.has(t.toLowerCase())); if (!more.length) return toast('No new steps to suggest'); more.forEach(t => i.todos.push(todoObj(t))); touch(i); refreshTodos(); toast(`Added ${more.length} step${more.length === 1 ? '' : 's'}`); };
+  $('#clearDone').onclick = () => { i.todos = i.todos.filter(t => !t.done); touch(i); refreshTodos(); };
+  $('#pinBtn').onclick = e => { i.pinned = !i.pinned; touch(i); e.target.textContent = i.pinned ? '★ Pinned' : '☆ Pin'; e.target.setAttribute('aria-pressed', !!i.pinned); };
+  $('#ics').onclick = () => exportIcs(i);
+  $('#addInspo').onclick = () => openCapture({ target: i.id });
+  const ins = $('#inspo');
+  ins.addEventListener('input', e => { if (!e.target.matches('[data-anote]')) return; const a = i.attachments.find(x => x.id === e.target.closest('.ins').dataset.aid); a.note = e.target.value; touch(i); });
+  ins.addEventListener('click', e => {
+    const card = e.target.closest('.ins'); if (!card) return;
+    const a = i.attachments.find(x => x.id === card.dataset.aid);
+    if (e.target.matches('[data-adel]')) { i.attachments = i.attachments.filter(x => x !== a); if (a.imgId) { delete images[a.imgId]; idbDel(a.imgId); } touch(i); renderIdea(i.id); }
+    else if (e.target.matches('[data-zoom]')) { $('#lbImg').src = e.target.src; $('#lbDlg').showModal(); }
+  });
+}
+
+/* ---------- new idea dialog ---------- */
+const newDlg = $('#newDlg');
+function openNew() {
+  $('#newForm').reset(); $('#nSugg').innerHTML = ''; newDlg.showModal(); $('#nTitle').focus();
+  $('#catList').innerHTML = Object.keys(catCounts()).map(c => `<option value="${esc(c)}">`).join('');
+}
+function updateSugg() {
+  const s = suggestCategories($('#nTitle').value, $('#nSum').value), cur = $('#nCat').value.trim();
+  $('#nSugg').innerHTML = s.length ? '<span class="sub" style="align-self:center">Suggested:</span>' + s.map(c => `<button type="button" class="chip${c === cur ? ' on' : ''}" data-pick="${esc(c)}">${esc(c)}</button>`).join('') : '';
+}
+['nTitle', 'nSum'].forEach(id => $('#' + id).addEventListener('input', updateSugg));
+$('#nCat').addEventListener('input', updateSugg);
+$('#nSugg').addEventListener('click', e => { const b = e.target.closest('[data-pick]'); if (b) { $('#nCat').value = b.dataset.pick; updateSugg(); } });
+$('#nCancel').onclick = () => newDlg.close();
+$('#newForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const title = $('#nTitle').value.trim(); if (!title) return;
+  const now = new Date().toISOString();
+  const idea = { id: uid(), title, summary: $('#nSum').value.trim(), category: $('#nCat').value.trim() || suggestCategories(title, $('#nSum').value)[0] || '', created: now, updated: now, status: 'idea', todos: [], plan: { start: '', due: '', details: '' }, location: '', resources: '', parked: '' };
+  idea.todos = generateTodos(idea).map(todoObj);
+  state.ideas.unshift(idea); save(); newDlg.close();
+  location.hash = '#/idea/' + idea.id;
+});
+
+/* ---------- scramble ---------- */
+const scrDlg = $('#scrDlg');
+let lastScramble = null;
+function scramble() {
+  const pool = state.ideas.filter(i => i.status !== 'done' && matches(i));
+  if (!pool.length) return toast('Nothing to scramble yet');
+  // favour ideas that have been forgotten longest, and parked ones
+  const cand = pool.length > 1 ? pool.filter(i => i.id !== lastScramble) : pool;
+  const wts = cand.map(i => (1 + (Date.now() - new Date(i.updated)) / 864e5) * (i.status === 'parked' ? 2 : 1));
+  let r = Math.random() * wts.reduce((a, b) => a + b, 0), pick = cand[cand.length - 1];
+  for (let k = 0; k < cand.length; k++) { if ((r -= wts[k]) <= 0) { pick = cand[k]; break; } }
+  lastScramble = pick.id;
+  const days = Math.floor((Date.now() - new Date(pick.updated)) / 864e5);
+  $('#scrBody').innerHTML = `<h2>Remember this one?</h2>${tileHTML(pick)}
+    <p class="sub" style="text-align:center">${days < 1 ? 'Touched today' : `Last touched ${days} day${days === 1 ? '' : 's'} ago`} · ${progress(pick)}% done</p>
+    ${pick.summary ? `<p>${esc(pick.summary)}</p>` : ''}${pick.parked ? `<div class="note"><b>Parked because:</b> ${esc(pick.parked)}</div>` : ''}
+    <div class="dlg-actions"><button class="btn" data-sc="close">Close</button><button class="btn" data-sc="again">Scramble again</button><button class="btn primary" data-sc="open" data-id="${pick.id}">Open it</button></div>`;
+  if (!scrDlg.open) scrDlg.showModal();
+}
+scrDlg.addEventListener('click', e => {
+  const b = e.target.closest('[data-sc]');
+  if (e.target === scrDlg || (b && b.dataset.sc === 'close')) scrDlg.close();
+  else if (b && b.dataset.sc === 'again') scramble();
+  else if (b && b.dataset.sc === 'open') { scrDlg.close(); location.hash = '#/idea/' + b.dataset.id; }
+});
+newDlg.addEventListener('click', e => { if (e.target === newDlg) newDlg.close(); });
+
+/* ---------- samples, export, import ---------- */
+function loadSamples() {
+  const s = [
+    ['Behind-the-scenes reel at the pottery studio', 'Short film of glazing day. Hire a gimbal and borrow a ring light. Shoot at the studio in Hackney.', 'Social media ideas', 'Pottery studio, Hackney', 'gimbal, ring light'],
+    ['Monthly "day in my life" video series', 'A recurring video showing a day running the business. Film at the studio and edit on Sundays.', 'Social media ideas', 'Pottery studio, Hackney', 'ring light, tripod'],
+    ['Launch a workshop subscription', 'Offer a monthly clay workshop for a fixed price to build steady revenue. Research competitor pricing first.', 'Business strategy ideas', 'Pottery studio, Hackney', 'kiln time, clay'],
+    ['Handmade mug set for Mum', 'A glazed set of four mugs in her favourite green. Book kiln time before November.', 'Christmas present ideas', 'Pottery studio, Hackney', 'kiln time, green glaze'],
+    ['Personalised advent calendar for the kids', 'Small hand-written challenges behind 24 numbered doors.', 'Christmas present ideas', 'Home', 'cardboard, pens']
+  ];
+  s.forEach(([title, summary, category, location, resources], k) => {
+    const d = new Date(Date.now() - (k * 9 + 2) * 864e5).toISOString();
+    const idea = { id: uid(), title, summary, category, created: d, updated: d, status: k === 2 ? 'parked' : 'idea', todos: [], plan: { start: '', due: '', details: '' }, location, resources, parked: k === 2 ? 'Waiting until the January quiet period.' : '' };
+    idea.todos = generateTodos(idea).map(todoObj);
+    state.ideas.push(idea);
+  });
+  save(); render();
+}
+function exportData() {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({ ...state, images }, null, 2)], { type: 'application/json' }));
+  a.download = 'scratchpad-backup-' + new Date().toISOString().slice(0, 10) + '.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+$('#importFile').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  f.text().then(txt => {
+    const data = JSON.parse(txt);
+    if (!Array.isArray(data.ideas)) throw 0;
+    const have = new Set(state.ideas.map(i => i.id)); let n = 0;
+    Object.entries(data.images || {}).forEach(([k, v]) => { if (!images[k] && typeof v === 'string' && v.startsWith('data:image/')) { images[k] = v; idbPut(k, v); } });
+    data.ideas.forEach(i => { if (i && i.id && i.title && !have.has(i.id)) { i.todos = Array.isArray(i.todos) ? i.todos : []; i.attachments = Array.isArray(i.attachments) ? i.attachments : []; i.plan = i.plan || {}; i.created = i.created || new Date().toISOString(); i.updated = i.updated || i.created; state.ideas.push(i); n++; } });
+    save(); render(); toast(`Imported ${n} idea${n === 1 ? '' : 's'}`);
+  }).catch(() => toast('That file is not a Scratchpad backup')).finally(() => { e.target.value = ''; });
+});
+
+/* ---------- image storage (IndexedDB keeps photos out of the small localStorage quota) ---------- */
+const images = {};
+let dbp = null, imgWarned = false;
+const warnImg = () => { if (!imgWarned) { imgWarned = true; toast('Photos could not be stored for later — they will be lost when you close the app.'); } };
+function idb() {
+  if (!dbp) dbp = new Promise((res, rej) => { try { const r = indexedDB.open('scratchpad', 1); r.onupgradeneeded = () => r.result.createObjectStore('images'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } });
+  return dbp;
+}
+const idbRun = (mode, fn) => idb().then(db => new Promise((res, rej) => { const tx = db.transaction('images', mode); fn(tx.objectStore('images')); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); }));
+const idbPut = (id, v) => idbRun('readwrite', s => s.put(v, id)).catch(warnImg);
+const idbDel = id => idbRun('readwrite', s => s.delete(id)).catch(() => {});
+async function loadImages() {
+  try { const db = await idb(); await new Promise(res => { const req = db.transaction('images').objectStore('images').openCursor(); req.onsuccess = () => { const c = req.result; if (c) { images[c.key] = c.value; c.continue(); } else res(); }; req.onerror = () => res(); }); } catch (e) {}
+}
+function downscale(file, max = 1800) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', 0.86));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('bad image')); };
+    img.src = url;
+  });
+}
+
+/* ---------- links & inspo suggestions ---------- */
+function extractUrls(text) {
+  const out = [];
+  String(text || '').replace(/\b(?:https?:\/\/|www\.)[^\s<>"']+/gi, m => { out.push(m.replace(/[).,;]+$/, '')); });
+  if (!out.length && /^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(String(text).trim())) out.push(String(text).trim());
+  return out.map(u => /^https?:\/\//i.test(u) ? u : 'https://' + u).filter(u => { try { return /^https?:$/.test(new URL(u).protocol); } catch (e) { return false; } });
+}
+const isImgUrl = u => /\.(png|jpe?g|gif|webp|avif)(\?|#|$)/i.test(u);
+const linkItem = u => ({ type: 'link', url: u, img: isImgUrl(u) });
+function linkInfo(url) {
+  try {
+    const u = new URL(url), host = u.hostname.replace(/^www\./, '');
+    let seg = decodeURIComponent(u.pathname.split('/').filter(Boolean).pop() || '').replace(/\.[a-z0-9]{2,4}$/i, '').replace(/[-_+]+/g, ' ').trim();
+    if (seg.length < 4 || /^[\d\s]+$/.test(seg) || (/\d{3,}/.test(seg) && !/\s/.test(seg)) || !/[aeiou]/i.test(seg)) seg = '';
+    return { host, slug: seg ? cap(seg.slice(0, 70)) : '' };
+  } catch (e) { return { host: url, slug: '' }; }
+}
+const HOST_HINTS = [
+  [/instagram|tiktok|youtube|youtu\.be|facebook|threads\.net|twitter|x\.com/, 'Social media ideas'],
+  [/etsy|amazon|notonthehighstreet|asos|ebay|shopify|depop/, 'Gift & shopping ideas'],
+  [/airbnb|booking\.com|tripadvisor|skyscanner|expedia/, 'Travel ideas'],
+  [/medium\.com|substack|wordpress|blogspot/, 'Writing ideas'],
+  [/linkedin/, 'Business strategy ideas']
+];
+function suggestFromInspo(items, note) {
+  note = note.trim();
+  let title = '';
+  if (note) { title = note.split(/[.\n!?]/)[0].trim(); if (title.length > 60) title = title.slice(0, 60).replace(/\s+\S*$/, '') + '…'; title = cap(title); }
+  const firstLink = items.find(x => x.type === 'link');
+  const info = firstLink ? linkInfo(firstLink.url) : null;
+  if (!title && info) title = info.slug || 'Inspo from ' + info.host;
+  if (!title) { const im = items.find(x => x.type === 'image' && x.name && !/^(screenshot|screen shot|img|image|photo|pxl|dsc|whatsapp|\d)/i.test(x.name)); if (im) title = cap(im.name.replace(/\.[a-z0-9]+$/i, '').replace(/[-_]+/g, ' ')); }
+  if (!title && items.length) title = 'Inspo from ' + new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  const hosts = items.filter(x => x.type === 'link').map(x => linkInfo(x.url).host).join(' ');
+  const cats = [];
+  HOST_HINTS.forEach(([re, c]) => { if (re.test(hosts) && !cats.includes(c)) cats.push(c); });
+  suggestCategories(title, note + ' ' + (info ? info.slug + ' ' + info.host.replace(/\.\w+$/, '') : ''), cats.length > 0).forEach(c => { if (!cats.includes(c)) cats.push(c); });
+  return { title, cats: cats.slice(0, 4) };
+}
+
+/* ---------- capture dialog ---------- */
+const capDlg = $('#capDlg');
+let capState = { items: [], titleDirty: false, catDirty: false };
+const currentIdeaId = () => (location.hash.match(/^#\/idea\/(.+)$/) || [])[1] || '';
+function openCapture({ items = [], note = '', target = '' } = {}) {
+  capState = { items: [...items], titleDirty: false, catDirty: false };
+  $('#capTarget').innerHTML = '<option value="">✦ A new idea</option>' + [...state.ideas].sort((a, b) => a.title.localeCompare(b.title)).map(i => `<option value="${i.id}">${esc(i.title)}</option>`).join('');
+  $('#capTarget').value = target && byId(target) ? target : '';
+  $('#capNote').value = note; $('#capUrl').value = ''; $('#capTitle').value = ''; $('#capCat').value = '';
+  renderCap(); if (!capDlg.open) capDlg.showModal();
+}
+function renderCap() {
+  $('#capItems').innerHTML = capState.items.map((x, k) => `<div class="item">${x.type === 'image' ? `<img src="${x.dataURL}" alt="">` : (x.img ? `<img src="${esc(x.url)}" alt="" onerror="this.remove()">` : '') + `<span>${esc(linkInfo(x.url).host)}</span>`}<button type="button" data-rm="${k}" aria-label="Remove">×</button></div>`).join('');
+  $('#capNew').hidden = $('#capTarget').value !== '';
+  updateCapSuggest();
+}
+function updateCapSuggest() {
+  if ($('#capTarget').value !== '') return;
+  const s = suggestFromInspo(capState.items, $('#capNote').value);
+  if (!capState.titleDirty) $('#capTitle').value = s.title;
+  if (!capState.catDirty) $('#capCat').value = s.cats[0] || '';
+  const cur = $('#capCat').value.trim();
+  $('#capSugg').innerHTML = s.cats.length ? '<span class="sub" style="align-self:center">Suggested:</span>' + s.cats.map(c => `<button type="button" class="chip${c === cur ? ' on' : ''}" data-pick="${esc(c)}">${esc(c)}</button>`).join('') : '';
+}
+$('#capItems').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (b) { capState.items.splice(+b.dataset.rm, 1); renderCap(); } });
+$('#capSugg').addEventListener('click', e => { const b = e.target.closest('[data-pick]'); if (b) { $('#capCat').value = b.dataset.pick; capState.catDirty = true; updateCapSuggest(); } });
+$('#capNote').addEventListener('input', updateCapSuggest);
+$('#capTitle').addEventListener('input', () => { capState.titleDirty = true; });
+$('#capCat').addEventListener('input', () => { capState.catDirty = true; updateCapSuggest(); });
+$('#capTarget').addEventListener('change', renderCap);
+$('#capPick').onclick = () => $('#capFile').click();
+$('#capCam').onclick = () => $('#capCamFile').click();
+['capFile', 'capCamFile'].forEach(id => $('#' + id).addEventListener('change', e => { ingest({ files: [...e.target.files] }); e.target.value = ''; }));
+function addCapUrl() { const urls = extractUrls($('#capUrl').value); if (!urls.length) return toast("That doesn't look like a link"); ingest({ urls }); $('#capUrl').value = ''; }
+$('#capAddUrl').onclick = addCapUrl;
+$('#capUrl').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCapUrl(); } });
+$('#capCancel').onclick = () => capDlg.close();
+capDlg.addEventListener('click', e => { if (e.target === capDlg) capDlg.close(); });
+$('#lbClose').onclick = () => $('#lbDlg').close();
+$('#lbDlg').addEventListener('click', e => { if (e.target === $('#lbDlg')) $('#lbDlg').close(); });
+
+function makeAttachment(it, note) {
+  const a = { id: uid(), type: it.type, note, added: new Date().toISOString() };
+  if (it.type === 'image') { a.imgId = uid(); images[a.imgId] = it.dataURL; idbPut(a.imgId, it.dataURL); a.title = it.name || ''; }
+  else { const li = linkInfo(it.url); a.url = it.url; a.title = li.slug || li.host; a.host = li.host; a.img = !!it.img; }
+  return a;
+}
+$('#capForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const note = $('#capNote').value.trim(), tid = $('#capTarget').value;
+  if (!capState.items.length && !note) return toast('Add a link, a photo or a note first');
+  const now = new Date().toISOString();
+  if (tid) {
+    const idea = byId(tid);
+    const atts = capState.items.map(it => makeAttachment(it, note));
+    if (!atts.length) atts.push({ id: uid(), type: 'note', note, added: now });
+    idea.attachments.push(...atts); touch(idea); capDlg.close(); toast('Added to "' + idea.title + '"');
+    if (currentIdeaId() === tid) renderIdea(tid); else if (!currentIdeaId()) renderHome();
+    return;
+  }
+  const title = $('#capTitle').value.trim() || 'Untitled idea';
+  const idea = { id: uid(), title, summary: note, category: $('#capCat').value.trim(), created: now, updated: now, status: 'idea', todos: [], plan: { start: '', due: '', details: '', remind: '' }, location: '', resources: '', parked: '', attachments: capState.items.map(it => makeAttachment(it, '')) };
+  idea.todos = generateTodos(idea).map(todoObj);
+  state.ideas.unshift(idea); save(); capDlg.close();
+  location.hash = '#/idea/' + idea.id;
+});
+
+/* bring things in: file picker, paste, drag & drop, phone share sheet */
+async function ingest({ files = [], urls = [], note = '' }, target) {
+  const items = [];
+  for (const f of files.filter(f => /^image\//.test(f.type))) { try { items.push({ type: 'image', dataURL: await downscale(f), name: f.name }); } catch (e) { toast("Couldn't read " + (f.name || 'that image')); } }
+  urls.forEach(u => items.push(linkItem(u)));
+  if (!items.length) return;
+  if (capDlg.open) { capState.items.push(...items); renderCap(); }
+  else openCapture({ items, note, target: target ?? currentIdeaId() });
+}
+document.addEventListener('paste', e => {
+  const cd = e.clipboardData; if (!cd) return;
+  const files = [...cd.files].filter(f => /^image\//.test(f.type));
+  const inField = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+  if (files.length) { e.preventDefault(); ingest({ files }); return; }
+  if (inField) return;
+  const urls = extractUrls(cd.getData('text/plain') || cd.getData('text/uri-list'));
+  if (urls.length) { e.preventDefault(); ingest({ urls }); }
+});
+const dragKinds = e => { const t = [...(e.dataTransfer?.types || [])]; return t.includes('Files') || t.includes('text/uri-list'); };
+let dragTile = null;
+const setDragTile = t => { if (dragTile !== t) { dragTile?.classList.remove('dragover'); t?.classList.add('dragover'); dragTile = t; } };
+document.addEventListener('dragover', e => { if (!dragKinds(e)) return; e.preventDefault(); document.body.classList.add('dragging'); setDragTile(e.target.closest?.('.tile[data-open]') || null); });
+document.addEventListener('dragleave', e => { if (!e.relatedTarget) { document.body.classList.remove('dragging'); setDragTile(null); } });
+document.addEventListener('drop', e => {
+  if (!dragKinds(e)) return;
+  e.preventDefault(); document.body.classList.remove('dragging'); setDragTile(null);
+  const tile = e.target.closest?.('.tile[data-open]');
+  const dt = e.dataTransfer, files = [...dt.files];
+  const urls = files.length ? [] : extractUrls(dt.getData('text/uri-list').split('\n').filter(l => !l.startsWith('#'))[0] || dt.getData('text/plain'));
+  if (scrDlg.open) scrDlg.close();
+  ingest({ files, urls }, tile ? tile.dataset.open : undefined);
+});
+async function takeShared() {
+  if (!('caches' in window)) return;
+  try {
+    const c = await caches.open('share-inbox'), mr = await c.match('meta');
+    if (!mr) return;
+    const m = await mr.json(), files = [];
+    for (let k = 0; k < m.files; k++) { const r = await c.match('file-' + k); if (r) { const b = await r.blob(); files.push(new File([b], 'shared-' + k, { type: b.type })); } }
+    await caches.delete('share-inbox');
+    const urls = extractUrls([m.url, m.text].join(' '));
+    const note = [m.title, m.text].filter(Boolean).join(' — ').replace(/\b(?:https?:\/\/|www\.)\S+/gi, '').trim();
+    if (location.hash === '#/share') history.replaceState(null, '', location.pathname);
+    await ingest({ files, urls, note }, '');
+  } catch (e) {}
+}
+
+/* ---------- reminders, pinning, calendar ---------- */
+const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+function dueItems() {
+  const t = ymd(new Date()), soon = ymd(new Date(Date.now() + 3 * 864e5)), out = [];
+  state.ideas.forEach(i => {
+    if (i.status === 'done') return;
+    const r = i.plan?.remind, d = i.plan?.due;
+    if (r && r <= t) out.push({ i, date: r, kind: 'Reminder' });
+    else if (d && d <= soon) out.push({ i, date: d, kind: d < t ? 'Overdue' : d === t ? 'Due today' : 'Due soon' });
+  });
+  return out.sort((a, b) => a.date.localeCompare(b.date));
+}
+function bannerHTML() {
+  if (q || cat || onlyPinned || mode !== 'all') return '';
+  const items = dueItems().slice(0, 5); if (!items.length) return '';
+  return `<div class="banner" role="region" aria-label="Coming up"><h2>Coming up</h2>${items.map(x => `<button class="due" data-open="${x.i.id}"><span class="when${x.kind === 'Overdue' ? ' over' : ''}">${x.kind}</span>${esc(x.i.title)} <span class="sub">· ${esc(new Date(x.date + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }))}</span></button>`).join('')}</div>`;
+}
+function notify() {
+  try {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    let done = []; try { done = JSON.parse(localStorage.getItem('scratchpad.notified') || '[]'); } catch (e) {}
+    dueItems().filter(x => x.kind !== 'Due soon').forEach(x => {
+      const k = x.i.id + x.date + x.kind; if (done.includes(k)) return; done.push(k);
+      const opts = { body: x.i.category || 'Scratchpad', tag: k }, title = x.kind + ': ' + x.i.title;
+      (navigator.serviceWorker?.ready.then(r => r.showNotification(title, opts)) || Promise.reject()).catch(() => { try { new Notification(title, opts); } catch (e) {} });
+    });
+    localStorage.setItem('scratchpad.notified', JSON.stringify(done.slice(-200)));
+  } catch (e) {}
+}
+function exportIcs(i) {
+  const ev = [['Reminder: ', i.plan?.remind], ['Due: ', i.plan?.due]].filter(x => x[1]);
+  if (!ev.length) return toast('Set a reminder or target finish date first');
+  const e = t => String(t || '').replace(/[\;,]/g, m => '\\' + m).replace(/\n/g, '\\n');
+  const day = s => s.replace(/-/g, '');
+  const next = s => { const [y, m, d] = s.split('-').map(Number); return ymd(new Date(y, m - 1, d + 1)).replace(/-/g, ''); };
+  const stamp = new Date().toISOString().replace(/[-:]|\.\d+/g, '');
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Scratchpad//EN', ...ev.flatMap(([p, d], k) => ['BEGIN:VEVENT', `UID:${i.id}-${k}@scratchpad`, `DTSTAMP:${stamp}`, `DTSTART;VALUE=DATE:${day(d)}`, `DTEND;VALUE=DATE:${next(d)}`, `SUMMARY:${e(p + i.title)}`, `DESCRIPTION:${e(i.summary)}`, 'END:VEVENT']), 'END:VCALENDAR'];
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([lines.join('\r\n')], { type: 'text/calendar' }));
+  a.download = (i.title.replace(/[^\w]+/g, '-').slice(0, 40) || 'idea') + '.ics'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function inspoHTML(i) {
+  const atts = i.attachments || [];
+  if (!atts.length) return '<p class="sub">Nothing here yet — add links, photos and screenshots that inspire this idea.</p>';
+  return atts.map(a => {
+    const safe = a.url && /^https?:\/\//i.test(a.url);
+    const top = a.type === 'image' ? (images[a.imgId] ? `<img class="pic" data-zoom src="${images[a.imgId]}" alt="${esc(a.title || 'Inspo image')}">` : '<div class="lnk">Image unavailable on this device</div>')
+      : a.type === 'link' ? `${a.img && safe ? `<img class="pic" data-zoom src="${esc(a.url)}" alt="" onerror="this.remove()">` : ''}${safe ? `<a class="lnk" href="${esc(a.url)}" target="_blank" rel="noopener noreferrer">${esc(a.title || a.host)}<small>${esc(a.host || '')}</small></a>` : `<div class="lnk">${esc(a.url)}</div>`}`
+      : '<div class="lnk">Note</div>';
+    return `<div class="ins" data-aid="${a.id}">${top}<textarea data-anote placeholder="How might I use this?" aria-label="Notes on this inspo">${esc(a.note)}</textarea><div class="foot"><span>${esc(new Date(a.added).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }))}</span><button data-adel>Remove</button></div></div>`;
+  }).join('');
+}
+async function init() {
+  await loadImages(); render(); takeShared(); notify(); setInterval(notify, 60000);
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+/* ---------- events & routing ---------- */
+document.addEventListener('click', e => {
+  const open = e.target.closest('[data-open]');
+  if (open && !scrDlg.contains(open)) { location.hash = '#/idea/' + open.dataset.open; return; }
+  const c = e.target.closest('[data-cat]');
+  if (c) { cat = c.dataset.cat; renderHome(); return; }
+  if (e.target.closest('[data-pinned]')) { onlyPinned = !onlyPinned; renderHome(); return; }
+  const a = e.target.closest('[data-act]'); if (!a) return;
+  switch (a.dataset.act) {
+    case 'new': openNew(); break;
+    case 'capture': openCapture(); break;
+    case 'notif': Notification.requestPermission().then(() => { renderHome(); notify(); }); break;
+    case 'samples': loadSamples(); break;
+    case 'combine': mode = mode === 'combine' ? 'all' : 'combine'; renderHome(); break;
+    case 'scramble': scramble(); break;
+    case 'home': location.hash = ''; break;
+    case 'export': exportData(); break;
+    case 'import': $('#importFile').click(); break;
+    case 'delete': { const id = location.hash.split('/')[2]; const i = byId(id); if (i && confirm(`Delete "${i.title}"? This can't be undone.`)) { (i.attachments || []).forEach(a => { if (a.imgId) { delete images[a.imgId]; idbDel(a.imgId); } }); state.ideas = state.ideas.filter(x => x.id !== id); save(); location.hash = ''; } break; }
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) && $('#search') && !document.querySelector('dialog[open]')) { e.preventDefault(); $('#search').focus(); }
+});
+function render() {
+  const m = location.hash.match(/^#\/idea\/(.+)$/);
+  if (m) renderIdea(m[1]); else renderHome();
+  window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', () => { if (location.hash === '#/share') takeShared(); else render(); });
+init();
+})();
+</script>
+</body>
+</html>
