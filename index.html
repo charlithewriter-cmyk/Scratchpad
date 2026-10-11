@@ -227,11 +227,12 @@ if (!Array.isArray(state.ideas)) state = { ideas: [] };
 state.ideas.forEach(i => { i.attachments = Array.isArray(i.attachments) ? i.attachments : []; i.plan = i.plan || {}; i.todos = i.todos || []; });
 let saveFailed = false;
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { if (!saveFailed) { saveFailed = true; toast('Could not save — browser storage is unavailable.'); } } };
-const byId = id => state.ideas.find(i => i.id === id);
+const fixIdea = i => { i.attachments = Array.isArray(i.attachments) ? i.attachments : []; i.plan = i.plan || {}; i.todos = i.todos || []; return i; };
+const byId = id => { const i = state.ideas.find(i => i.id === id); return i && fixIdea(i); };
 function touch(i) { i.updated = new Date().toISOString(); save(); }
 
 const fmtDate = iso => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}) + ', ' + d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}); };
-function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; document.body.append(t); setTimeout(() => t.remove(), 2600); }
+function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; (document.querySelector('dialog[open]') || document.body).append(t); setTimeout(() => t.remove(), 2600); }
 
 /* ---------- text analysis ---------- */
 const STOP = new Set(('a an the and or but if of to in on at for with from by as is are was were be been it its this that these those i we you they my our your their me us them do does did have has had will would could should can may might just also about into over under up down out so than then too very more most some any each other such only own same not no nor what which who whom how when where why all both few many much one two get got make made want need idea ideas thing things like use using new etc maybe really bit lot lots').split(' '));
@@ -501,7 +502,7 @@ $('#newForm').addEventListener('submit', e => {
   e.preventDefault();
   const title = $('#nTitle').value.trim(); if (!title) return;
   const now = new Date().toISOString();
-  const idea = { id: uid(), title, summary: $('#nSum').value.trim(), category: $('#nCat').value.trim() || suggestCategories(title, $('#nSum').value)[0] || '', created: now, updated: now, status: 'idea', todos: [], plan: { start: '', due: '', details: '' }, location: '', resources: '', parked: '' };
+  const idea = { id: uid(), title, summary: $('#nSum').value.trim(), category: $('#nCat').value.trim() || suggestCategories(title, $('#nSum').value)[0] || '', created: now, updated: now, status: 'idea', todos: [], plan: { start: '', due: '', details: '' }, location: '', resources: '', parked: '', attachments: [] };
   idea.todos = generateTodos(idea).map(todoObj);
   state.ideas.unshift(idea); save(); newDlg.close();
   location.hash = '#/idea/' + idea.id;
@@ -545,7 +546,7 @@ function loadSamples() {
   ];
   s.forEach(([title, summary, category, location, resources], k) => {
     const d = new Date(Date.now() - (k * 9 + 2) * 864e5).toISOString();
-    const idea = { id: uid(), title, summary, category, created: d, updated: d, status: k === 2 ? 'parked' : 'idea', todos: [], plan: { start: '', due: '', details: '' }, location, resources, parked: k === 2 ? 'Waiting until the January quiet period.' : '' };
+    const idea = { id: uid(), title, summary, category, created: d, updated: d, status: k === 2 ? 'parked' : 'idea', todos: [], plan: { start: '', due: '', details: '' }, location, resources, parked: k === 2 ? 'Waiting until the January quiet period.' : '', attachments: [] };
     idea.todos = generateTodos(idea).map(todoObj);
     state.ideas.push(idea);
   });
@@ -685,6 +686,9 @@ function makeAttachment(it, note) {
 }
 $('#capForm').addEventListener('submit', e => {
   e.preventDefault();
+  try { saveCapture(); } catch (err) { console.error(err); toast('Sorry, that did not save: ' + (err.message || err)); }
+});
+function saveCapture() {
   const note = $('#capNote').value.trim(), tid = $('#capTarget').value;
   if (!capState.items.length && !note) return toast('Add a link, a photo or a note first');
   const now = new Date().toISOString();
@@ -701,7 +705,7 @@ $('#capForm').addEventListener('submit', e => {
   idea.todos = generateTodos(idea).map(todoObj);
   state.ideas.unshift(idea); save(); capDlg.close();
   location.hash = '#/idea/' + idea.id;
-});
+}
 
 /* bring things in: file picker, paste, drag & drop, phone share sheet */
 async function ingest({ files = [], urls = [], note = '' }, target) {
